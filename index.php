@@ -3,6 +3,8 @@ include_once('./OSMepub.php');
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $gen = new OSMepub\Ebook("OSMtestbook", "http://localhost:35873/this");
+    $gen->addAuthor("Dawson Goodell");
+    $gen->addContributor("OSM Publishing House", "pbl"); //Types taken from http://www.loc.gov/marc/relators/relacode.html
 
     //$gen->addCover("<h1>OSMtestbook</h1><h3>An experiment by Dawson Goodell and OSMstudios.</h3>");
     //$gen->visibleTOC(TRUE);
@@ -14,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $gen->addChapter("Chapter 6", "<p>Some content for the sixth chapter.</p>");
 
     $gen->Generate();
-    echo 'Post Back';
 }
 ?>
 

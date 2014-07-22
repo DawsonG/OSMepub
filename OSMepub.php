@@ -7,7 +7,7 @@ function GUID() {
     if (function_exists('com_create_guid') === true) {
         return trim(com_create_guid(), '{}');
     }
-
+    
     return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
 }
 
@@ -47,11 +47,10 @@ class Ebook {
     private $authors; //An array of author objects
     private $description;
     private $subject;
-    private $creator;
-    private $publisher;
     private $rights;
     private $date;
     private $relation;
+    private $contributors;
 
     private $showCover = FALSE; //Do we have a cover?
     private $showTOC = FALSE;  //Do we have a table of contents or not?
@@ -71,20 +70,19 @@ class Ebook {
     function __construct($title, $id) {
         $this->title = $title;
         $this->identifier = $id;
+        $this->id = GUID();
         $this->chapters = array();
+        $this->contributors = array();
         $this->navPointCount = 0;
 
         $this->files = array(
-            "container" => array("name" => "META-INF/container.xml", "type" => "static", "contents" => "<?xml version=\"1.0\"?>\n<container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\">\n<rootfiles>\n<rootfile full-path=\"content.opf\" media-type=\"application/oebps-package+xml\"/>\n</rootfiles>\n</container>")
+            "container" => array("name" => "META-INF/container.xml", "type" => "static", "content" => "<?xml version=\"1.0\"?>\n<container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\">\n<rootfiles>\n<rootfile full-path=\"content.opf\" media-type=\"application/oebps-package+xml\"/>\n</rootfiles>\n</container>")
         );
-
-        $this->id = GUID();
-        
 
     }
 
     function __destruct() {
-        //rrmdir($this->workDir);
+
     }
 
     //Properties
@@ -96,6 +94,22 @@ class Ebook {
         return $this->showTOC;
     }
 
+    function addAuthor($name) {
+        array_push($this->contributors, array(
+            "is_creator" => true,
+            "name" => $name,
+            "type" => "aut"
+        ));
+    }
+
+    function addContributor($name, $type) {
+        array_push($this->contributors, array(
+            "is_creator" => FALSE,
+            "name" => $name,
+            "type" => $type
+        ));   
+    }
+
     // Use functions
     function addStyling($file, $content) {
         array_push($this->files, array("name" => $file, "type" => "css", "contents" => $content));
@@ -104,7 +118,7 @@ class Ebook {
     function addCover($content) {
         $this->showCover = TRUE;
 
-        array_push($this->files, array("name" => "cover.html", "type" => "cover", "contents" => $content));
+        $this->files['cover'] = array("name" => "cover.html", "type" => "cover", "content" => $content));
     }
 
     function addChapter($chapter_title, $content) {
@@ -125,7 +139,7 @@ class Ebook {
 
 
     // Internal use functions
-    function writeTOC() {
+    function writeTOC($title = "Table of Contents", $cssFileName = NULL) {
         //A TOC.ncx file is required
         @date_default_timezone_set("GMT");
 
@@ -185,7 +199,38 @@ class Ebook {
         if(!$this->showTOC)
             return;
 
+        $w = new \XMLWriter();
+        $w->openMemory();
+        $w->startDocument('1.0', 'UTF-8');
+        $w->setIndent(4);
 
+        $w->writeRaw("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">");
+        $w->startElement('html');
+            $w->writeAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+            $w->writeElement('head');
+                $w->writeElement('title');
+                    $w->text($title);
+                $w->endElement();
+            $w->endElement();
+
+            $w->writeElement('body');
+                $w->writeElement('h1');
+                    $w->text($title);
+                $w->endElement();
+
+                foreach($this->chapters as &$chapter) {
+                    $w->writeElement('p');
+                        $w->writeElement('a');
+                            $w->writeAttribute('href', $chapter['id']);
+                            $w->text($chapter['title']);
+                        $w->endElement()
+                    $w->endElement();
+                }
+            $w->endElement();
+        $w->endElement(); //</html>
+        $w->endDocument();
+
+        $this->files['toc'] = array('name' => 'toc.html', 'type' => 'toc', "content" => $w->outputMemory(TRUE));
     }
 
     function writeContentOpf() {
@@ -239,16 +284,18 @@ class Ebook {
                     $w->endElement();
                 }
 
-                if(!IsNullOrEmpty($this->creator)) {
-                    $w->startElement('dc:creator');
-                        $w->text($this->creator);
-                    $w->endElement();
-                }
-
-                if(!IsNullOrEmpty($this->publisher)) {
-                    $w->startElement('dc:publisher');
-                        $w->text($this->publisher);
-                    $w->endElement();
+                foreach($this->contributors as &$contributor) {
+                    if ($contributor['is_creator']) {
+                        $w->startElement('dc:creator');
+                            $w->writeAttribute('opf:role', $contributor['type']);
+                            $w->text($contributor['name']);
+                        $w->endElement();
+                    } else {
+                        $w->startElement('dc:contributor');
+                            $w->writeAttribute('opf:role', $contributor['type']);
+                            $w->text($contributor['name']);
+                        $w->endElement();
+                    }
                 }
 
                 $w->startElement('dc:date');
@@ -327,10 +374,20 @@ class Ebook {
         $this->zip->setExtraField(TRUE);
         
         $this->zip->addDirectory("META-INF");
-        $this->zip->addFile($this->files['container']['contents'], 'META-INF/container.xml');
+        $this->zip->addFile($this->files['container']['content'], 'META-INF/container.xml');
 
         $this->zip->addFile($this->contentOpf, 'content.opf');
         $this->zip->addFile($this->tocNcx, 'toc.ncx');
+
+        if ($this->showCover) {
+            $c = $this->files['cover'];
+            $this->zip->addFile($c['content'], $c['name']);
+        }
+
+        if ($this->showTOC) {
+            $t = $this->files['toc'];
+            $this->zip->addFile($t['content'], $t['name']);
+        }
 
         foreach($this->chapters as &$chapter) {
             $this->zip->addFile($chapter["content"], $chapter["id"]);
