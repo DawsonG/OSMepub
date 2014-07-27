@@ -6,8 +6,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $gen->addAuthor("Dawson Goodell");
     $gen->addContributor("OSM Publishing House", "pbl"); //Types taken from http://www.loc.gov/marc/relators/relacode.html
 
-    //$gen->addCover("<h1>OSMtestbook</h1><h3>An experiment by Dawson Goodell and OSMstudios.</h3>");
-    //$gen->visibleTOC(TRUE);
+    $gen->addCover("<h1>OSMtestbook</h1><h3>An experiment by Dawson Goodell and OSMstudios.</h3>");
+    $gen->visibleTOC(TRUE);
     $gen->addChapter("Chapter 1", "<p>Some content for the first chapter.</p>");
     $gen->addChapter("Chapter 2", "<p>Some content for the second chapter.</p>");
     $gen->addChapter("Chapter 3", "<p>Some content for the third chapter.</p>");
@@ -15,7 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $gen->addChapter("Chapter 5", "<p>Some content for the fifth chapter.</p>");
     $gen->addChapter("Chapter 6", "<p>Some content for the sixth chapter.</p>");
 
-    $gen->Generate();
+    $gen->sendFile();
+    $gen->saveFile('./test.epub');
 }
 ?>
 

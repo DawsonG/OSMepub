@@ -60,6 +60,7 @@ class Ebook {
     private $chapters; //An array of chapter objects
 
     private $zip;
+    private $generated = FALSE;
 
     private $fileHead = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">';
     private $contentOpf;
@@ -118,7 +119,7 @@ class Ebook {
     function addCover($content) {
         $this->showCover = TRUE;
 
-        $this->files['cover'] = array("name" => "cover.html", "type" => "cover", "content" => $content));
+        $this->files['cover'] = array("name" => "cover.html", "type" => "cover", "content" => $content);
     }
 
     function addChapter($chapter_title, $content) {
@@ -134,8 +135,22 @@ class Ebook {
         $this->writeTOC();
 
         $this->createArchive();
+        $this->genereated = TRUE;
     }
 
+    function sendFile() {
+        if (!$this->generated)
+            $this->Generate();
+
+        $this->zip->sendZip($this->title . ".epub");
+    }
+
+    function saveFile($path) {
+        if (!$this->generated)
+            $this->Generate();
+
+        $this->zip->setZipFile($path);
+    }
 
 
     // Internal use functions
@@ -207,26 +222,26 @@ class Ebook {
         $w->writeRaw("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">");
         $w->startElement('html');
             $w->writeAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-            $w->writeElement('head');
-                $w->writeElement('title');
+            $w->startElement('head');
+                $w->startElement('title');
                     $w->text($title);
                 $w->endElement();
             $w->endElement();
 
-            $w->writeElement('body');
-                $w->writeElement('h1');
+            $w->startElement('body');
+                $w->startElement('h1');
                     $w->text($title);
                 $w->endElement();
 
                 foreach($this->chapters as &$chapter) {
-                    $w->writeElement('p');
-                        $w->writeElement('a');
+                    $w->startElement('p');
+                        $w->startElement('a');
                             $w->writeAttribute('href', $chapter['id']);
                             $w->text($chapter['title']);
-                        $w->endElement()
+                        $w->endElement();
                     $w->endElement();
                 }
-            $w->endElement();
+            $w->endElement(); //</body>
         $w->endElement(); //</html>
         $w->endDocument();
 
@@ -316,17 +331,25 @@ class Ebook {
             $w->startElement('manifest');
                 if ($this->showCover) {
                     $w->startElement('item');
-                        $w->writeAttribute('id', 'cover');
+                        $w->writeAttribute('id', 'cover.html');
                         $w->writeAttribute('href', 'cover.html');
                         $w->writeAttribute('media-type', 'application/xhtml+xml');
                     $w->endElement();
                 }
-
+                /*
                 $w->startElement('item');
                     $w->writeAttribute('id', 'ncx');
                     $w->writeAttribute('href', 'toc.ncx');
                     $w->writeAttribute('media-type', 'application/x-dtbncx+xml');
                 $w->endElement();
+                */
+                if ($this->showTOC) {
+                    $w->startElement('item');
+                        $w->writeAttribute('id', 'toc.html');
+                        $w->writeAttribute('href', 'toc.html');
+                        $w->writeAttribute('media-type', 'application/xhtml+xml');
+                    $w->endElement();
+                }
 
                 foreach ($this->chapters as &$chapter) {
                     $w->startElement('item');
@@ -340,8 +363,14 @@ class Ebook {
             $w->startElement('spine');
                 $w->writeAttribute('toc', 'ncx');
                 if ($this->showCover) {
-                    $w->startElement('itemred');
-                        $w->writeAttribute('idref', 'cover');
+                    $w->startElement('itemref');
+                        $w->writeAttribute('idref', 'cover.html');
+                    $w->endElement();
+                }
+
+                if ($this->showTOC) {
+                    $w->startElement('itemref');
+                        $w->writeAttribute('idref', 'toc.html');
                     $w->endElement();
                 }
 
@@ -390,10 +419,8 @@ class Ebook {
         }
 
         foreach($this->chapters as &$chapter) {
-            $this->zip->addFile($chapter["content"], $chapter["id"]);
+            $this->zip->addFile($chapter['content'], $chapter['id']);
         }
-
-        $this->zip->sendZip($this->title . ".epub");
     }
 
     private function createNavPoint($writer, $title, $src) {
