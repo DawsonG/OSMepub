@@ -1,7 +1,7 @@
 <?php
 namespace OSMepub;
 
-include_once('./Zip.php');
+include_once('Zip.php');
 
 function GUID() {
     if (function_exists('com_create_guid') === true) {
@@ -57,6 +57,8 @@ class Ebook {
 
     //Handled internally
     private $files; //An array of static files to be created. 
+    private $css;
+    private $hasCSS = FALSE; //If we have added CSS we need to add it to the archive
     private $chapters; //An array of chapter objects
 
     private $zip;
@@ -87,6 +89,10 @@ class Ebook {
     }
 
     //Properties
+    function getTitle() {
+        return $this->title;
+    }
+
     function VisibleTOC($arg) {
         if (isset($arg)) {
             $this->showTOC = $arg;
@@ -96,27 +102,35 @@ class Ebook {
     }
 
     function addAuthor($name) {
-        array_push($this->contributors, array(
+        $comparr = array(
             "is_creator" => true,
             "name" => $name,
             "type" => "aut"
-        ));
+        );
+
+        if (in_array($comparr, $this->contributors) === FALSE)
+            array_push($this->contributors, $comparr);
     }
 
     function addContributor($name, $type) {
-        array_push($this->contributors, array(
+        $comparr = array(
             "is_creator" => FALSE,
             "name" => $name,
             "type" => $type
-        ));   
+        );
+
+        if (in_array($comparr, $this->contributors) === FALSE)
+            array_push($this->contributors, $comparr);   
     }
 
     // Use functions
     function addStyling($file, $content) {
-        array_push($this->files, array("name" => $file, "type" => "css", "contents" => $content));
+        $this->hasCSS = TRUE;
+
+        array_push($this->css, array("name" => $file, "contents" => $content));
     }
 
-    function addCover($content) {
+    function setCover($content) {
         $this->showCover = TRUE;
 
         $this->files['cover'] = array("name" => "cover.html", "type" => "cover", "content" => $content);
@@ -138,11 +152,14 @@ class Ebook {
         $this->genereated = TRUE;
     }
 
-    function sendFile() {
+    function sendFile($arg = FALSE) {
         if (!$this->generated)
             $this->Generate();
 
-        $this->zip->sendZip($this->title . ".epub");
+        if ($arg === FALSE)
+            $this->zip->sendZip($this->title . ".epub");
+        else
+            $this->zip->sendZip($arg);
     }
 
     function saveFile($path) {
@@ -407,6 +424,10 @@ class Ebook {
 
         $this->zip->addFile($this->contentOpf, 'content.opf');
         $this->zip->addFile($this->tocNcx, 'toc.ncx');
+
+        if ($this->hasCSS) {
+            
+        }
 
         if ($this->showCover) {
             $c = $this->files['cover'];

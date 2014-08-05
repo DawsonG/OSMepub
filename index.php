@@ -6,7 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $gen->addAuthor("Dawson Goodell");
     $gen->addContributor("OSM Publishing House", "pbl"); //Types taken from http://www.loc.gov/marc/relators/relacode.html
 
-    $gen->addCover("<h1>OSMtestbook</h1><h3>An experiment by Dawson Goodell and OSMstudios.</h3>");
+    $gen->setCover("<h1>OSMtestbook</h1><h3>An experiment by Dawson Goodell and OSMstudios.</h3>");
     $gen->visibleTOC(TRUE);
     $gen->addChapter("Chapter 1", "<p>Some content for the first chapter.</p>");
     $gen->addChapter("Chapter 2", "<p>Some content for the second chapter.</p>");
@@ -25,53 +25,29 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     <head>
         <meta charset="utf-8" />
         <title>OSMepub Test Page</title>
+
+        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css" rel="stylesheet">
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     </head>
     <body>
-        <form action="/" method="post">
-            <button type="submit">Generate Simple Book</button>
-        </form>
-<pre>{
-    "id": "com.acme.books.MyUniqueBookID",
-    "title": "Sample eBook Title",
-    "language": "en",
- 
-    "authors": [
-        { "name": "John Smith", "role": "aut"},
-        { "name": "Jane Appleseed", "role": "dsr"}
-    ],
- 
-    "description": "Brief description of the book",
-    "subject": "List of keywords, pertinent to content, separated by commas",
-    "publisher": "ACME Publishing Inc.",
-    "rights": "Copyright (c) 2013, Someone",
-    "date": "2013-02-27",
-    "relation": "http://www.acme.com/books/MyUniqueBookIDWebEdition/",
- 
-    "files": {
-        "coverpage": "coverpage.md",
-        "title-page": "titlepage.md",
-        "include": [
-            { "id":"ncx", "path":"toc.ncx" },
-            "cover.jpg",
-            "style.css",
-            "*.md",
-            "media/*"
-        ],
-        "index": "index.md",
-        "exclude": []
-    },
- 
-    "spine": {
-        "toc": "ncx",
-        "items": [
-            "coverpage",
-            "title-page",
-            "copyright",
-            "foreword",
-            "|^c\d{1,2}-.*$|",
-            "index"
-        ]
-    }
-}</pre>
+        <div class="container">
+            <h1>OSMepub Test Cases</h1>
+
+            <div class="row">
+                <div class="span3">
+                
+                </div>
+                <div class="span3">
+                
+                </div>
+                <div class="span3">
+                
+                </div>
+                <div class="span3">
+                
+                </div>
+            </div>
+        </div>
     </body>
 </html>
