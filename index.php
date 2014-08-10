@@ -1,25 +1,3 @@
-<?php
-include_once('./OSMepub.php');
-
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $gen = new OSMepub\Ebook("OSMtestbook", "http://localhost:35873/this");
-    $gen->addAuthor("Dawson Goodell");
-    $gen->addContributor("OSM Publishing House", "pbl"); //Types taken from http://www.loc.gov/marc/relators/relacode.html
-
-    $gen->setCover("<h1>OSMtestbook</h1><h3>An experiment by Dawson Goodell and OSMstudios.</h3>");
-    $gen->visibleTOC(TRUE);
-    $gen->addChapter("Chapter 1", "<p>Some content for the first chapter.</p>");
-    $gen->addChapter("Chapter 2", "<p>Some content for the second chapter.</p>");
-    $gen->addChapter("Chapter 3", "<p>Some content for the third chapter.</p>");
-    $gen->addChapter("Chapter 4", "<p>Some content for the fourth chapter.</p>");
-    $gen->addChapter("Chapter 5", "<p>Some content for the fifth chapter.</p>");
-    $gen->addChapter("Chapter 6", "<p>Some content for the sixth chapter.</p>");
-
-    $gen->sendFile();
-    $gen->saveFile('./test.epub');
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -36,10 +14,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
             <div class="row">
                 <div class="span3">
-                
+                    <ul>
+                        <li><a href="test-cases/simple.php">Create Simple and Send</a></li>
+                        <li><a href="test-cases/multiple-authors.php">Create Multiple Authors and Send</a></li>
+                    </ul>
+                    
                 </div>
                 <div class="span3">
-                
+                    
                 </div>
                 <div class="span3">
                 
