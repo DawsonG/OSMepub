@@ -149,7 +149,7 @@ class Ebook {
         $this->writeTOC();
 
         $this->createArchive();
-        $this->genereated = TRUE;
+        $this->generated = TRUE;
     }
 
     function sendFile($arg = FALSE) {
@@ -353,13 +353,6 @@ class Ebook {
                         $w->writeAttribute('media-type', 'application/xhtml+xml');
                     $w->endElement();
                 }
-                /*
-                $w->startElement('item');
-                    $w->writeAttribute('id', 'ncx');
-                    $w->writeAttribute('href', 'toc.ncx');
-                    $w->writeAttribute('media-type', 'application/x-dtbncx+xml');
-                $w->endElement();
-                */
                 if ($this->showTOC) {
                     $w->startElement('item');
                         $w->writeAttribute('id', 'toc.html');
@@ -367,6 +360,12 @@ class Ebook {
                         $w->writeAttribute('media-type', 'application/xhtml+xml');
                     $w->endElement();
                 }
+
+                $w->startElement('item');
+                    $w->writeAttribute('id', 'ncx');
+                    $w->writeAttribute('href', 'toc.ncx');
+                    $w->writeAttribute('media-type', 'application/x-dtbncx+xml');
+                $w->endElement();
 
                 foreach ($this->chapters as &$chapter) {
                     $w->startElement('item');
@@ -391,10 +390,11 @@ class Ebook {
                     $w->endElement();
                 }
 
+                /*
                 $w->startElement('itemref');
                     $w->writeAttribute('idref', 'ncx');
                 $w->endElement();
-                
+                */
 
                 foreach ($this->chapters as &$chapter) {
                     $w->startElement('itemref');
@@ -403,9 +403,32 @@ class Ebook {
                 }
             $w->endElement(); //End SPINE
 
-            //$w->startElement('guide');
+            $w->startElement('guide');
+                if ($this->showCover) {
+                    $w->startElement('reference');
+                        $w->writeAttribute('type', 'title-page');
+                        $w->writeAttribute('title', $this->title);
+                        $w->writeAttribute('href', 'cover.html');
+                    $w->endElement();
+                }
 
-            //$w->endElement(); //End GUIDE
+                if ($this->showTOC) {
+                    $w->startElement('reference');
+                        $w->writeAttribute('type', 'toc');
+                        $w->writeAttribute('title', 'Table of Contents');
+                        $w->writeAttribute('href', 'toc.html');
+                    $w->endElement();
+                }
+
+                foreach ($this->chapters as &$chapter) {
+                    $w->startElement('reference');
+                        $w->writeAttribute('type', 'text');
+                        $w->writeAttribute('title', $chapter["title"]);
+                        $w->writeAttribute('href', $chapter["id"]);
+                    $w->endElement();
+                }
+            $w->endElement(); //End GUIDE
+
         $w->endElement();  //End PACKAGE
         $w->endDocument();   
         $this->contentOpf = $w->outputMemory(TRUE);
