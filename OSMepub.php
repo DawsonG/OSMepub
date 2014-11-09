@@ -130,8 +130,11 @@ class Ebook {
         array_push($this->css, array("name" => $file, "contents" => $content));
     }
 
-    function setCover($content) {
+    function setCover($content, $full = FALSE) {
         $this->showCover = TRUE;
+
+        if (!$full)
+            $content = $this->fileHead . "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>$this->title</title></head><body>$content</body></html>";
 
         $this->files['cover'] = array("name" => "cover.html", "type" => "cover", "content" => $content);
     }
