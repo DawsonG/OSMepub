@@ -133,10 +133,13 @@ class Ebook {
     function setCover($content, $full = FALSE) {
         $this->showCover = TRUE;
 
-        if (!$full)
-            $content = $this->fileHead . "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>$this->title</title></head><body>$content</body></html>";
+        if (!$full || $full == FALSE) {
+            $fullcontent = $this->fileHead . "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>$this->title</title></head><body>$content</body></html>";
+        } else {
+            $fullcontent = $content;
+        }
 
-        $this->files['cover'] = array("name" => "cover.html", "type" => "cover", "content" => $content);
+        $this->files['cover'] = array("name" => "cover.html", "type" => "cover", "content" => $fullcontent);
     }
 
     function addChapter($chapter_title, $content) {
@@ -457,6 +460,7 @@ class Ebook {
 
         if ($this->showCover) {
             $c = $this->files['cover'];
+
             $this->zip->addFile($c['content'], $c['name']);
         }
 
